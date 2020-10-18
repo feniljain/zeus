@@ -7,6 +7,7 @@ import (
 	"time"
 
 	handlers "github.com/feniljain/zeus/api/handlers"
+	meeting "github.com/feniljain/zeus/pkg/meeting"
 	participant "github.com/feniljain/zeus/pkg/participant"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -30,19 +31,22 @@ func main() {
 
 	inject(client)
 
+	fmt.Println("Listening on port 8010")
+
 	if err := http.ListenAndServe(":8010", nil); err != nil {
 		panic(err)
 	}
-
-	fmt.Println("Listening on port 8010")
 }
 
 func inject(client *mongo.Client) {
 	participantRepo := participant.MakeNewParticipantRepo(client)
+	meetingRepo := meeting.MakeNewMeetingRepo(client)
 
 	participantSvc := participant.MakeNewParticipantService(participantRepo)
+	meetingSvc := meeting.MakeNewMeetingService(meetingRepo)
 
 	handlers.MakeParticipantHandler(participantSvc)
+	handlers.MakeMeetingHandler(meetingRepo)
 }
 
 func initDatabase(w http.ResponseWriter, req *http.Request) {

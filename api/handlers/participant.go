@@ -3,6 +3,8 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+
+	participant "github.com/feniljain/zeus/pkg/participant"
 )
 
 func health(w http.ResponseWriter, req *http.Request) {
@@ -10,6 +12,6 @@ func health(w http.ResponseWriter, req *http.Request) {
 }
 
 //MakeParticipantHandler ...
-func MakeParticipantHandler() {
+func MakeParticipantHandler(participantSvc participant.Service) {
 	http.HandleFunc("/health", health)
 }

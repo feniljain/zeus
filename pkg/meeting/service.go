@@ -7,7 +7,8 @@ import (
 //Service ...
 type Service interface {
 	CreateMeeting(CreateMeetingReq) error
-	GetMeetingDetails(uid int) (entities.Meeting, error)
+	GetMeetingDetailsFromId(uid int) (entities.Meeting, error)
+	GetMeetingDetailsFromTime(start, end string) ([]entities.Meeting, error)
 }
 
 type meetingSvc struct {
@@ -23,8 +24,12 @@ func (mSvc *meetingSvc) CreateMeeting(req CreateMeetingReq) error {
 	return mSvc.repo.CreateMeeting(req)
 }
 
-func (mSvc *meetingSvc) GetMeetingDetails(uid int) (entities.Meeting, error) {
-	return mSvc.repo.GetMeetingDetails(uid)
+func (mSvc *meetingSvc) GetMeetingDetailsFromId(uid int) (entities.Meeting, error) {
+	return mSvc.repo.GetMeetingDetailsFromId(uid)
+}
+
+func (mSvc *meetingSvc) GetMeetingDetailsFromTime(start, end string) ([]entities.Meeting, error) {
+	return mSvc.repo.GetMeetingDetailsFromTime(start, end)
 }
 
 //import (
@@ -34,7 +39,8 @@ func (mSvc *meetingSvc) GetMeetingDetails(uid int) (entities.Meeting, error) {
 //Repository ...
 type Repository interface {
 	CreateMeeting(CreateMeetingReq) error
-	GetMeetingDetails(uid int) (entities.Meeting, error)
+	GetMeetingDetailsFromId(uid int) (entities.Meeting, error)
+	GetMeetingDetailsFromTime(start, end string) ([]entities.Meeting, error)
 }
 
 //CreateMeetingReq represents the structure for creating a meeting

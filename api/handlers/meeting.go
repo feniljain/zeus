@@ -9,18 +9,64 @@ import (
 
 	views "github.com/feniljain/zeus/api/views"
 	pkg "github.com/feniljain/zeus/pkg"
+	"github.com/feniljain/zeus/pkg/entities"
 	meeting "github.com/feniljain/zeus/pkg/meeting"
+	"github.com/feniljain/zeus/pkg/participant"
 )
 
-func createMeeting(meetingSvc meeting.Service) http.HandlerFunc {
+func baseSubPath(meetingSvc meeting.Service, participantSvc participant.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		message := make(map[string]interface{})
+		var meetings []entities.Meeting
+
+		queries := r.URL.Query()
+		if queries.Get("participant") != "" {
+			fmt.Println("Participant query")
+			ids, err := participantSvc.GetMeetings(queries.Get("participant"))
+
+			if err != nil {
+				message["message"] = err.Error()
+				views.SendResponse(w, http.StatusBadRequest, "An error occurred", message)
+				return
+			}
+
+			for i := 0; i < len(ids); i++ {
+				meeting, err := meetingSvc.GetMeetingDetailsFromId(ids[i])
+
+				if err != nil {
+					message["message"] = err.Error()
+					views.SendResponse(w, http.StatusBadRequest, "An error occurred", message)
+				}
+
+				meetings = append(meetings, meeting)
+			}
+
+			message["meetings"] = meetings
+			views.SendResponse(w, http.StatusOK, "", message)
+			return
+		}
+
+		if queries.Get("start") != "" {
+			fmt.Println("Start & End Time query")
+
+			meetings, err := meetingSvc.GetMeetingDetailsFromTime(queries["start"][0], queries["end"][0])
+			if err != nil {
+				fmt.Println(err)
+				message["message"] = pkg.ErrInternalServer.Error()
+				views.SendResponse(w, http.StatusInternalServerError, "An error occurred", message)
+				return
+			}
+
+			message["meetings"] = meetings
+			views.SendResponse(w, http.StatusOK, "", message)
+			return
+		}
 
 		req := meeting.CreateMeetingReq{}
 
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&req)
-
 		if err != nil {
 			fmt.Println(err)
 			message["message"] = "An error occurred"
@@ -53,7 +99,7 @@ func getMeetingDetails(meetingSvc meeting.Service) http.HandlerFunc {
 			return
 		}
 
-		res, err := meetingSvc.GetMeetingDetails(uid)
+		res, err := meetingSvc.GetMeetingDetailsFromId(uid)
 		if err != nil {
 			message["message"] = err.Error()
 			views.SendResponse(w, http.StatusNotFound, "An error occurred", message)
@@ -66,7 +112,7 @@ func getMeetingDetails(meetingSvc meeting.Service) http.HandlerFunc {
 }
 
 //MakeParticipantHandler ...
-func MakeMeetingHandler(meetingSvc meeting.Service) {
-	http.HandleFunc("/meetings", createMeeting(meetingSvc))
+func MakeMeetingHandler(meetingSvc meeting.Service, participantSvc participant.Service) {
+	http.HandleFunc("/meetings", baseSubPath(meetingSvc, participantSvc))
 	http.HandleFunc("/meetings/", getMeetingDetails(meetingSvc))
 }

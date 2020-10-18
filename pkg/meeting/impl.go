@@ -17,13 +17,71 @@ type repo struct {
 	client *mongo.Client
 }
 
+var (
+	layout string = "2006-01-02 15:04:05"
+)
+
 //MakeNewMeetingRepo takes and instance of mongo client and initializes the repo
 func MakeNewMeetingRepo(client *mongo.Client) Repository {
 	return &repo{client: client}
 }
 
-func (r *repo) GetMeetingDetails(uid int) (entities.Meeting, error) {
-	participantCollection := r.client.Database("testing").Collection("meetings")
+func (r *repo) GetMeetingDetailsFromTime(start, end string) ([]entities.Meeting, error) {
+	startGiven, err := time.Parse(layout, start)
+	if err != nil {
+		return nil, pkg.ErrWrongTimestampFormat
+	}
+
+	endGiven, err := time.Parse(layout, end)
+	if err != nil {
+		return nil, pkg.ErrWrongTimestampFormat
+	}
+
+	var meetings []entities.Meeting
+
+	meetingCollection := r.client.Database("testing").Collection("meetings")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"title": "s"}
+	cur, err := meetingCollection.Find(ctx, filter)
+	if err != nil {
+		return nil, pkg.ErrInternalServer
+	}
+	defer cur.Close(ctx)
+
+	for cur.Next(ctx) {
+		var result entities.Meeting
+		err := cur.Decode(&result)
+		if err != nil {
+			return nil, pkg.ErrInternalServer
+		}
+
+		starttime, err := time.Parse(layout, result.StartTime)
+		if err != nil {
+			return nil, pkg.ErrInternalServer
+		}
+
+		endtime, err := time.Parse(layout, result.EndTime)
+		if err != nil {
+			return nil, pkg.ErrInternalServer
+		}
+
+		if startGiven.After(starttime) || endGiven.After(endtime) || (startGiven.Equal(starttime) && endGiven.Equal(endtime)) {
+			meetings = append(meetings, result)
+		}
+	}
+
+	if err := cur.Err(); err != nil {
+		return nil, pkg.ErrInternalServer
+	}
+
+	return meetings, nil
+}
+
+func (r *repo) GetMeetingDetailsFromId(uid int) (entities.Meeting, error) {
+	meetingCollection := r.client.Database("testing").Collection("meetings")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -31,7 +89,7 @@ func (r *repo) GetMeetingDetails(uid int) (entities.Meeting, error) {
 	var res entities.Meeting
 
 	filter := bson.M{"uid": uid}
-	err := participantCollection.FindOne(ctx, filter).Decode(&res)
+	err := meetingCollection.FindOne(ctx, filter).Decode(&res)
 	if err != nil {
 		return entities.Meeting{}, pkg.ErrInvalidMeetingID
 	}
@@ -43,7 +101,6 @@ func (r *repo) GetMeetingDetails(uid int) (entities.Meeting, error) {
 func (r *repo) CreateMeeting(req CreateMeetingReq) error {
 	fmt.Println("Create New Meeting")
 
-	layout := "2006-01-02 15:04:05"
 	//t, err := time.Parse(layout, "2014-11-17 23:02:03")
 	//if err != nil {
 	//	return pkg.ErrWrongTimestampFormat
@@ -71,7 +128,7 @@ func (r *repo) CreateMeeting(req CreateMeetingReq) error {
 	rand.Seed(time.Now().UTC().UnixNano())
 	uid := rand.Intn(10000000)
 
-	result, err := meetingCollection.InsertOne(ctx, bson.M{"uid": uid, "title": meeting.Title, "starttime": meeting.StartTime, "endtime": meeting.EndTime, "creationTimestamp": time.Now().Format(layout)})
+	_, err = meetingCollection.InsertOne(ctx, bson.M{"uid": uid, "title": meeting.Title, "starttime": meeting.StartTime, "endtime": meeting.EndTime, "creationTimestamp": time.Now().Format(layout)})
 	if err != nil {
 		return err
 	}
@@ -92,8 +149,7 @@ func (r *repo) CreateMeeting(req CreateMeetingReq) error {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 
-			id := fmt.Sprintf("%v", result.InsertedID)
-			var meetingIDs = []string{id}
+			var meetingIDs = []int{uid}
 
 			_, err := participantCollection.InsertOne(ctx, bson.M{"name": participant.Name, "email": participant.Email, "rsvp": participant.Rsvp, "meetings": meetingIDs})
 			if err != nil {

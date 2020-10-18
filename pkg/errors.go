@@ -7,4 +7,8 @@ var (
 	ErrWrongFormat = errors.New("error: Invalid format of data sent")
 	//ErrInvalidMeetingID depicts wrong meeting id is sent
 	ErrInvalidMeetingID = errors.New("error: Invalid meeting ID")
+	//ErrInternalServer depicts arbitary errors
+	ErrInternalServer = errors.New("error: Internal Server Error")
+	//ErrWrongTimestampFormat depicts wrong timestamp format
+	ErrWrongTimestampFormat = errors.New("error: Invalid format of date and time sent, please check the example for correct format")
 )

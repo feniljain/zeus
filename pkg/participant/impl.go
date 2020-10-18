@@ -17,4 +17,5 @@ func MakeNewParticipantRepo(client *mongo.Client) Repository {
 
 func (r *repo) CreateParticipant(req CreateParticipantReq) error {
 	fmt.Println("Create New Participant")
+	return nil
 }

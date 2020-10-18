@@ -8,7 +8,6 @@ import (
 
 	"github.com/feniljain/zeus/pkg"
 	"github.com/feniljain/zeus/pkg/entities"
-	_participant "github.com/feniljain/zeus/pkg/participant"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -141,7 +140,7 @@ func (r *repo) CreateMeeting(req CreateMeetingReq) error {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		var res _participant.CreateParticipantReq
+		var res entities.Participant
 
 		filter := bson.M{"email": participant.Email}
 		err := participantCollection.FindOne(ctx, filter).Decode(&res)
@@ -155,14 +154,47 @@ func (r *repo) CreateMeeting(req CreateMeetingReq) error {
 			if err != nil {
 				return pkg.ErrInternalServer
 			}
+			continue
+		}
 
-			//fmt.Println("Inserted participant")
-			//fmt.Println(res.InsertedID)
+		res.Meetings = append(res.Meetings, uid)
+
+		flag := 0
+
+		for i := 0; i < len(res.Meetings); i++ {
+			uid1 := res.Meetings[i]
+			m, err := r.GetMeetingDetailsFromId(uid1)
+			if err != nil {
+				return err
+			}
+
+			startGiven, err := time.Parse(layout, meeting.StartTime)
+			endGiven, err := time.Parse(layout, meeting.EndTime)
+			starttime, err := time.Parse(layout, m.StartTime)
+			endtime, err := time.Parse(layout, m.EndTime)
+
+			if (m.UID != uid) && !(endGiven.Before(starttime) || startGiven.After(endtime) || endGiven.Equal(starttime) || startGiven.Equal(endtime)) {
+				fmt.Println(startGiven, endGiven, starttime, endtime)
+				fmt.Println(res)
+				fmt.Println(m.Title)
+				flag = 1
+				break
+			}
+		}
+
+		if flag == 1 {
+			continue
+		}
+
+		ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		filter = bson.M{"email": res.Email}
+		_, err = participantCollection.ReplaceOne(ctx, filter, bson.M{"name": res.Name, "email": res.Email, "rsvp": res.Rsvp, "meetings": res.Meetings})
+		if err != nil {
+			return pkg.ErrInternalServer
 		}
 	}
-
-	//fmt.Println("Inserted meeting")
-	//fmt.Println(res.InsertedID)
 
 	return nil
 }

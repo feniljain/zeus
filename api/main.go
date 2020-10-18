@@ -6,13 +6,14 @@ import (
 	"net/http"
 	"time"
 
+	handlers "github.com/feniljain/zeus/api/handlers"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
-	http.HandleFunc("/health", hello)
+	handlers.MakeParticipantHandler()
 
 	if err := http.ListenAndServe(":8010", nil); err != nil {
 		panic(err)

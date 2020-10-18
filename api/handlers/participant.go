@@ -5,11 +5,11 @@ import (
 	"net/http"
 )
 
-func hello(w http.ResponseWriter, req *http.Request) {
+func health(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, "Namastey Duniyaa!")
 }
 
 //MakeParticipantHandler ...
 func MakeParticipantHandler() {
-	http.HandleFunc("/health", hello)
+	http.HandleFunc("/health", health)
 }

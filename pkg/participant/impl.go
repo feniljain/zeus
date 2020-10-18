@@ -23,7 +23,7 @@ func (r *repo) CreateParticipant(req CreateParticipantReq) error {
 
 	collection := r.client.Database("testing").Collection("participants")
 
-	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	res, err := collection.InsertOne(ctx, bson.M{"name": "someone", "email": "someone@gmail.com", "rsvp": "yes"})

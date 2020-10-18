@@ -72,7 +72,7 @@ type Repository interface {
 //CreateMeetingReq represents the structure for creating a meeting
 type CreateMeetingReq struct {
 	UID          string   `json:"uid"`
-	Title        string   `json:"name"`
+	Title        string   `json:"title"`
 	StartTime    string   `json:"starttime"`
 	EndTime      string   `json:"endtime"`
 	Participants []string `json:"participants"`

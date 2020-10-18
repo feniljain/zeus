@@ -46,7 +46,7 @@ func inject(client *mongo.Client) {
 	meetingSvc := meeting.MakeNewMeetingService(meetingRepo)
 
 	handlers.MakeParticipantHandler(participantSvc)
-	handlers.MakeMeetingHandler(meetingRepo)
+	handlers.MakeMeetingHandler(meetingSvc)
 }
 
 func initDatabase(w http.ResponseWriter, req *http.Request) {

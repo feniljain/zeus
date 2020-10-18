@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	views "github.com/feniljain/zeus/api/views"
@@ -24,7 +25,8 @@ func createMeeting(meetingSvc meeting.Service) http.HandlerFunc {
 			return
 		}
 
-		//fmt.Printf(req.)
+		fmt.Println(req.Title)
+		meetingSvc.CreateMeeting(req)
 
 		message["message"] = "Successfully created meeting!"
 		views.SendResponse(w, http.StatusCreated, "", message)

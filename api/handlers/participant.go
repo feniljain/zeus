@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	views "github.com/feniljain/zeus/api/views"
+	pkg "github.com/feniljain/zeus/pkg"
 	participant "github.com/feniljain/zeus/pkg/participant"
 )
 
@@ -39,6 +40,6 @@ func createParticipant(participantSvc participant.Service) http.HandlerFunc {
 
 //MakeParticipantHandler ...
 func MakeParticipantHandler(participantSvc participant.Service) {
-	http.HandleFunc("/health", health)
+	http.HandleFunc("/health", health())
 	http.HandleFunc("/create-participant", createParticipant(participantSvc))
 }

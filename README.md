@@ -15,7 +15,7 @@
 - [X]  Not including meetings which clash for a participant
 - [X]  Race condition free(Test from golang's default tool)
 - [X]  Unit tests
-- [X]  Pagination
+- [X]  Pagination(with the get all meetings of a participant)
 
 <br>
 
@@ -45,6 +45,27 @@ go run api/main.go
 ```bash
 go test api/endpoints_test.go
 ```
+
+## Architecture
+- Insipration from: https://medium.com/gdg-vit/clean-architecture-the-right-way-d83b81ecac6
+
+- This project is built in *Clean Architecture*, it contains of two main modules(not packages), i.e. api and pkg.
+
+- Service acts as usecase layer
+
+- Repo as Repository layer
+
+- Impl as implementation layer
+
+- api contains all the necessary route handlings and backend supporting services(i.e. receiving requests and forwarding to proper handlers), it also initializes everything and does the important step of *dependecy injection*, it contains packages:
+	- main: cotnains main.go and testing file.
+	- views: contains response wrapper
+	- handlers: contains all the necessaey handlers and linking with services, which in turn response using views.
+- pkg contains the business logic divided into couple of packages
+	- pkg: contains centralized errors.go file defining all the necessary errors which will thrown from backend and pkg
+	- meeting: contains all the neccessary files for meeting business logic
+	- participant: contains all the neccessary files for participant business logic
+	- entities: necessary middle man structs for holding participants and meetings data from db and so forth
 
 ## Routes
 -  ### Make new meetings with participants
@@ -81,21 +102,6 @@ go test api/endpoints_test.go
 - ###  Get all meetings within a stipulated timeframe
 		Route:  /meetings?start=2005-01-02 15:04:05&end=2007-01-02 15:34:05
 		Method: GET
-
-## Architecture
-- Insipration from: https://medium.com/gdg-vit/clean-architecture-the-right-way-d83b81ecac6
-
-- This project is built in *Clean Architecture*, it contains of two main modules(not packages), i.e. api and pkg.\
-
-- api contains all the necessary route handlings and backend supporting services(i.e. receiving requests and forwarding to proper handlers), it also initializes everything and does the important step of *dependecy injection*, it contains packages:
-	- main: cotnains main.go and testing file.
-	- views: contains response wrapper
-	- handlers: contains all the necessaey handlers and linking with services, which in turn response using views.
-- pkg contains the business logic divided into couple of packages
-	- pkg: contains centralized errors.go file defining all the necessary errors which will thrown from backend and pkg
-	- meeting: contains all the neccessary files for meeting business logic
-	- participant: contains all the neccessary files for participant business logic
-	- entities: necessary middle man structs for holding participants and meetings data from db and so forth
 
 ## Contributors
 

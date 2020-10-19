@@ -16,9 +16,17 @@ import (
 
 //Handle participant query
 func participantQuery(participantSvc participant.Service, meetingSvc meeting.Service, w http.ResponseWriter, r *http.Request) {
+
 	queries := r.URL.Query()
 	message := make(map[string]interface{})
 	var meetings []entities.Meeting
+
+	if r.Method != "GET" {
+		message["message"] = "Requested URL not found, please check method of request and URL"
+		views.SendResponse(w, http.StatusNotFound, "An error occurred", message)
+		return
+	}
+
 	ids, err := participantSvc.GetMeetings(queries.Get("participant"))
 
 	if err != nil {
@@ -48,6 +56,13 @@ func timeQuery(meetingSvc meeting.Service, w http.ResponseWriter, r *http.Reques
 	queries := r.URL.Query()
 	message := make(map[string]interface{})
 	meetings, err := meetingSvc.GetMeetingDetailsFromTime(queries["start"][0], queries["end"][0])
+
+	if r.Method != "GET" {
+		message["message"] = "Requested URL not found, please check method of request and URL"
+		views.SendResponse(w, http.StatusNotFound, "An error occurred", message)
+		return
+	}
+
 	if err != nil {
 		fmt.Println(err)
 		message["message"] = pkg.ErrInternalServer.Error()
@@ -63,6 +78,12 @@ func timeQuery(meetingSvc meeting.Service, w http.ResponseWriter, r *http.Reques
 //Handle create meeting
 func createMeeting(meetingSvc meeting.Service, w http.ResponseWriter, r *http.Request) {
 	message := make(map[string]interface{})
+
+	if r.Method != "POST" {
+		message["message"] = "Requested URL not found, please check method of request and URL"
+		views.SendResponse(w, http.StatusNotFound, "An error occurred", message)
+		return
+	}
 
 	req := meeting.CreateMeetingReq{}
 
@@ -87,8 +108,8 @@ func createMeeting(meetingSvc meeting.Service, w http.ResponseWriter, r *http.Re
 	return
 }
 
-//Resolve if there are queries, then redirect them to needed method or create a new meeting
-func baseSubPathResolver(meetingSvc meeting.Service, participantSvc participant.Service) http.HandlerFunc {
+//BaseSubPathResolver resolves if there are queries, then redirect them to needed method or create a new meeting
+func BaseSubPathResolver(meetingSvc meeting.Service, participantSvc participant.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		queries := r.URL.Query()
@@ -108,9 +129,16 @@ func baseSubPathResolver(meetingSvc meeting.Service, participantSvc participant.
 	}
 }
 
-func getMeetingDetails(meetingSvc meeting.Service) http.HandlerFunc {
+//GetMeetingDetails gets the details of a meeting from the ID
+func GetMeetingDetailsFromID(meetingSvc meeting.Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		message := make(map[string]interface{})
+
+		if r.Method != "GET" {
+			message["message"] = "Requested URL not found, please check method of request and URL"
+			views.SendResponse(w, http.StatusNotFound, "An error occurred", message)
+			return
+		}
 
 		uri := r.URL.RequestURI()
 		idx := strings.LastIndex(uri, "/")
@@ -135,6 +163,6 @@ func getMeetingDetails(meetingSvc meeting.Service) http.HandlerFunc {
 
 //MakeParticipantHandler ...
 func MakeMeetingHandler(meetingSvc meeting.Service, participantSvc participant.Service) {
-	http.HandleFunc("/meetings", baseSubPathResolver(meetingSvc, participantSvc))
-	http.HandleFunc("/meetings/", getMeetingDetails(meetingSvc))
+	http.HandleFunc("/meetings", BaseSubPathResolver(meetingSvc, participantSvc))
+	http.HandleFunc("/meetings/", GetMeetingDetailsFromID(meetingSvc))
 }

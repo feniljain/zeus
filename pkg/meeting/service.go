@@ -4,7 +4,7 @@ import (
 	entities "github.com/feniljain/zeus/pkg/entities"
 )
 
-//Service ...
+//Service acts as the usecase layer of clean architecture
 type Service interface {
 	CreateMeeting(CreateMeetingReq) error
 	GetMeetingDetailsFromId(uid int) (entities.Meeting, error)
@@ -15,7 +15,7 @@ type meetingSvc struct {
 	repo Repository
 }
 
-//MakeNewMeetingService ...
+//MakeNewMeetingService provides a new instance of meeting service
 func MakeNewMeetingService(repo Repository) Service {
 	return &meetingSvc{repo: repo}
 }
@@ -32,11 +32,7 @@ func (mSvc *meetingSvc) GetMeetingDetailsFromTime(start, end string) ([]entities
 	return mSvc.repo.GetMeetingDetailsFromTime(start, end)
 }
 
-//import (
-//	entities "github.com/feniljain/zeus/pkg/entities"
-//)
-
-//Repository ...
+//Repository acts as the defining layer between service(usecase and implementation)
 type Repository interface {
 	CreateMeeting(CreateMeetingReq) error
 	GetMeetingDetailsFromId(uid int) (entities.Meeting, error)

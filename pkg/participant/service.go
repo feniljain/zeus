@@ -1,6 +1,6 @@
 package participant
 
-//Service ...
+//Service acts as the usecase layer of clean architecture
 type Service interface {
 	CreateParticipant(CreateParticipantReq) error
 	GetMeetings(email string) ([]int, error)
@@ -10,7 +10,7 @@ type participantSvc struct {
 	repo Repository
 }
 
-//MakeNewParticipantService ...
+//MakeNewParticipantService provides a new instance of participant service
 func MakeNewParticipantService(repo Repository) Service {
 	return &participantSvc{repo: repo}
 }

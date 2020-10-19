@@ -15,6 +15,7 @@ import (
 
 func main() {
 
+	//Initialize DB
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
@@ -28,44 +29,27 @@ func main() {
 		}
 	}()
 
+	//Dependency Injection
 	inject(client)
 
 	fmt.Println("Listening on port 8010")
 
+	//Setup Listener of requests
 	if err := http.ListenAndServe(":8010", nil); err != nil {
 		panic(err)
 	}
 }
 
 func inject(client *mongo.Client) {
+	//Creating new instance of repositories
 	participantRepo := participant.MakeNewParticipantRepo(client)
 	meetingRepo := meeting.MakeNewMeetingRepo(client)
 
+	//Injecting them in services and creating their new instances
 	participantSvc := participant.MakeNewParticipantService(participantRepo)
 	meetingSvc := meeting.MakeNewMeetingService(meetingRepo)
 
+	//Injecting services and defining all handlers
 	handlers.MakeParticipantHandler(participantSvc)
 	handlers.MakeMeetingHandler(meetingSvc, participantSvc)
 }
-
-//func initDatabase(w http.ResponseWriter, req *http.Request) {
-//	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-//	defer cancel()
-//	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
-//	if err != nil {
-//		panic(err)
-//	}
-//
-//	defer func() {
-//		if err = client.Disconnect(ctx); err != nil {
-//			panic(err)
-//		}
-//	}()
-//
-//	collection := client.Database("testing").Collection("participants")
-//	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
-//	defer cancel()
-//	res, err := collection.InsertOne(ctx, bson.M{"name": "someone", "email": "someone@gmail.com", "rsvp": "yes"})
-//	id := res.InsertedID
-//	fmt.Println(id)
-//}

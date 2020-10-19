@@ -1,6 +1,6 @@
 package participant
 
-//Repository ...
+//Repository acts as the defining layer between service(usecase and implementation)
 type Repository interface {
 	CreateParticipant(CreateParticipantReq) error
 	GetMeetings(email string) ([]int, error)

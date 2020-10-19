@@ -3,7 +3,7 @@ package participant
 //Service acts as the usecase layer of clean architecture
 type Service interface {
 	CreateParticipant(CreateParticipantReq) error
-	GetMeetings(email string) ([]int, error)
+	GetAllMeetings(email string, page int) ([]int, error)
 }
 
 type participantSvc struct {
@@ -19,6 +19,6 @@ func (pSvc *participantSvc) CreateParticipant(req CreateParticipantReq) error {
 	return pSvc.repo.CreateParticipant(req)
 }
 
-func (pSvc *participantSvc) GetMeetings(email string) ([]int, error) {
-	return pSvc.repo.GetMeetings(email)
+func (pSvc *participantSvc) GetAllMeetings(email string, page int) ([]int, error) {
+	return pSvc.repo.GetAllMeetings(email, page)
 }

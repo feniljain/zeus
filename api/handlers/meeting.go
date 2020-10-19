@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -27,7 +26,19 @@ func participantQuery(participantSvc participant.Service, meetingSvc meeting.Ser
 		return
 	}
 
-	ids, err := participantSvc.GetMeetings(queries.Get("participant"))
+	var page int = -1
+
+	if queries.Get("page") != "" {
+		p, err := strconv.Atoi(queries.Get("page"))
+		if err != nil {
+			message["message"] = err.Error()
+			views.SendResponse(w, http.StatusBadRequest, "An error occurred", message)
+			return
+		}
+		page = p
+	}
+
+	ids, err := participantSvc.GetAllMeetings(queries.Get("participant"), page)
 
 	if err != nil {
 		message["message"] = err.Error()
@@ -64,7 +75,6 @@ func timeQuery(meetingSvc meeting.Service, w http.ResponseWriter, r *http.Reques
 	}
 
 	if err != nil {
-		fmt.Println(err)
 		message["message"] = pkg.ErrInternalServer.Error()
 		views.SendResponse(w, http.StatusInternalServerError, "An error occurred", message)
 		return
@@ -90,7 +100,6 @@ func createMeeting(meetingSvc meeting.Service, w http.ResponseWriter, r *http.Re
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(&req)
 	if err != nil {
-		fmt.Println(err)
 		message["message"] = "An error occurred"
 		views.SendResponse(w, http.StatusBadRequest, pkg.ErrWrongFormat.Error(), message)
 		return

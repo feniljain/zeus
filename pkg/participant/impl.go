@@ -15,12 +15,17 @@ type repo struct {
 	client *mongo.Client
 }
 
+var (
+	pageSize = 2
+)
+
 //MakeNewParticipantRepo takes and instance of mongo client and initializes the repo
 func MakeNewParticipantRepo(client *mongo.Client) Repository {
 	return &repo{client: client}
 }
 
-func (r *repo) GetMeetings(email string) ([]int, error) {
+func (r *repo) GetAllMeetings(email string, page int) ([]int, error) {
+
 	participantCollection := r.client.Database("testing").Collection("participants")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -35,7 +40,15 @@ func (r *repo) GetMeetings(email string) ([]int, error) {
 		return nil, pkg.ErrParticipantEmail
 	}
 
-	return res.Meetings, nil
+	if page == -1 {
+		return res.Meetings, nil
+	} else if page > 0 && len(res.Meetings) >= (page*pageSize) {
+		return res.Meetings[((page - 1) * pageSize):((page) * pageSize)], nil
+	} else if len(res.Meetings) <= ((page - 1) * pageSize) {
+		return res.Meetings, nil
+	} else {
+		return res.Meetings, nil
+	}
 }
 
 func (r *repo) CreateParticipant(req CreateParticipantReq) error {

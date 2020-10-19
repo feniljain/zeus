@@ -205,7 +205,7 @@ func isTimeClash(r *repo, meetings []int, currMeeting CreateMeetingReq, uid int)
 		uid1 := meetings[i]
 		m, err := r.GetMeetingDetailsFromId(uid1)
 		if err != nil {
-			return false, err
+			return false, pkg.ErrInternalServer
 		}
 
 		//Extracting all needed timeframes

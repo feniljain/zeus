@@ -1,7 +1,5 @@
 <p align="center">
-	<a href="https://dscvit.com">
 		<img src="https://user-images.githubusercontent.com/30529572/60032255-cd613600-96c3-11e9-891f-c2e69c3ce96e.png" width=150px />
-	</a>
 		<h2 align="center"> Zeus </h2>
 		<h4 align="center"> Yet another meeting scheduler! <h4>
 		</p>
